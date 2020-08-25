@@ -23,10 +23,6 @@ class DependencyWalker:
 
     self.m_pe_target_dependencies = set()
 
-  def print(self, *args):
-    self.m_print.pprint(*args)
-    return
-
   def _log(self, *args):
     if self.m_verbose and len(*args) != 0: self.m_print.pprint(*args)
     return
