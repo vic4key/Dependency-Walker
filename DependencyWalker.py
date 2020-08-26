@@ -46,7 +46,7 @@ class DependencyWalker:
     # Load preferences from a json file
     result = {}
     try:
-      PREFS_FILE_NAME = "prefs.json"
+      PREFS_FILE_NAME = R"prefs.json"
       if File.IsFileExists(PREFS_FILE_NAME):
           data = File.Read(PREFS_FILE_NAME)
           if data: result = json.loads(data)
