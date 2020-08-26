@@ -1,4 +1,4 @@
-import os, pefile, ctypes, pprint, shutil, json
+import os, pefile, ctypes, pprint, shutil, json, time
 from PyVutils import File
 
 class DependencyWalker:
@@ -74,6 +74,8 @@ class DependencyWalker:
 
   def is_dependency_file(self, file_path: str):
     # Determine that a file is a dependency file or not
+    start_time = time.perf_counter()
+
     if self._is_file_checked(file_path):
       return False
 
@@ -81,7 +83,12 @@ class DependencyWalker:
       if file.read(2) != b"MZ": return False
 
     pe = pefile.PE(file_path, fast_load=True)
-    pe.parse_data_directories()
+    # IMAGE_DIRECTORY_ENTRY_EXPORT/IMPORT
+    pe.parse_data_directories([0, 1], True, True) # IMAGE_DIRECTORY_ENTRY_EXPORT/IMPORT
+
+    delta_time = time.perf_counter() - start_time
+    self._log(f"{File.ExtractFileName(file_path)} -> {delta_time:.3f}s")
+
     if not hasattr(pe, "DIRECTORY_ENTRY_EXPORT"): return False
 
     return True
@@ -103,11 +110,17 @@ class DependencyWalker:
 
   def _walk_dependency_file(self, file_path: str):
     # Walk a single file
+    start_time = time.perf_counter()
+
     if not File.IsFileExists(file_path): return []
     if self._is_file_checked(file_path): return []
 
     pe = pefile.PE(file_path, fast_load=True)
-    pe.parse_data_directories()
+    pe.parse_data_directories([0, 1], True, True) # IMAGE_DIRECTORY_ENTRY_EXPORT/IMPORT
+
+    delta_time = time.perf_counter() - start_time
+    self._log(f"{File.ExtractFileName(file_path)} -> {delta_time:.3f}s")
+
     if not hasattr(pe, "DIRECTORY_ENTRY_IMPORT"): return []
 
     result = set()
