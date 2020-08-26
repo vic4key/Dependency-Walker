@@ -48,7 +48,8 @@ def main():
   parser = argparse.ArgumentParser(description=__package__)
   parser.add_argument("-a", "--action", type=str, required=True, default="", choices=ACTIONS, help="The action to do")
   parser.add_argument("-t", "--target", type=str, required=True, default="", help="The target file that a pe-file")
-  parser.add_argument("-d", "--dirs", type=str, nargs="+", help="Set of directories that contains dependency files")
+  parser.add_argument("-d", "--dirs", type=str, required=True, nargs="+", help="Set of directories that contains dependency files")
+  parser.add_argument("-e", "--exts", type=str, default=[], nargs="+", help="Set of extensions or any as default")
   parser.add_argument("-v", "--verbose", default=False, action="store_true", help="Print the verbose information")
   args = parser.parse_args()
 
@@ -57,8 +58,11 @@ def main():
   print(f"Dirs:")
   for dir in args.dirs: print(f"   + `{dir}`")
 
+  print(f"Exts:")
+  print(f"   + `{'*.*' if not args.exts else ' '.join(args.exts)}`")
+
   if args.action in ACTIONS:
-    dw = DependencyWalker(args.target, args.dirs, args.verbose)
+    dw = DependencyWalker(args.target, args.dirs, args.exts, args.verbose)
     dependencies = dw.walk()
     if dependencies:
       printout(args, dependencies, "resolvable")

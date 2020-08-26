@@ -6,7 +6,7 @@ class DependencyWalker:
 
   g_list_checked_files = set()
 
-  def __init__(self, target: str, dirs: list, verbose: bool):
+  def __init__(self, target: str, dirs: list, exts: list, verbose: bool):
     # Constructor
     self.m_verbose = verbose
     self.m_print = pprint.PrettyPrinter(indent=2)
@@ -15,6 +15,8 @@ class DependencyWalker:
     if not File.IsFileExists(self.m_pe_target): return
     target_dir, _ = os.path.split(self.m_pe_target)
     target_dir = self._normalize_dirs([target_dir])[0]
+
+    self.m_dependency_exts = exts
 
     self.m_pe_dependency_dirs  = self._normalize_dirs(dirs)
     self.m_pe_dependency_files = self.walk_dependency_dirs(self.m_pe_dependency_dirs)
@@ -27,7 +29,7 @@ class DependencyWalker:
 
     self.m_prefs = self._load_prefs()
     self.m_list_ignore_prefix = self.m_prefs.get("ignore_prefix", [])
-    self._log(self.m_list_ignore_prefix)
+    # self._log(self.m_list_ignore_prefix)
 
   def _log(self, *args):
     # Logging message
@@ -95,7 +97,7 @@ class DependencyWalker:
       if self.is_dependency_file(file_path): result.append(os.path.split(file_path))
       return
 
-    File.LSRecursive(dir, fn_callback)
+    File.LSRecursive(dir, fn_callback, self.m_dependency_exts)
 
     return result
 
