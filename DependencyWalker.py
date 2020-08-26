@@ -1,16 +1,18 @@
-import os, pefile, ctypes, pprint, shutil
+import os, pefile, ctypes, pprint, shutil, json
 from PyVutils import File
 
 class DependencyWalker:
   # Dependency Walker
 
+  g_list_checked_files = set()
+
   def __init__(self, target: str, dirs: list, verbose: bool):
     # Constructor
-
     self.m_verbose = verbose
     self.m_print = pprint.PrettyPrinter(indent=2)
 
     self.m_pe_target = target
+    if not File.IsFileExists(self.m_pe_target): return
     target_dir, _ = os.path.split(self.m_pe_target)
     target_dir = self._normalize_dirs([target_dir])[0]
 
@@ -23,17 +25,45 @@ class DependencyWalker:
 
     self.m_pe_target_dependencies = set()
 
+    self.m_prefs = self._load_prefs()
+    self.m_list_ignore_prefix = self.m_prefs.get("ignore_prefix", [])
+    self._log(self.m_list_ignore_prefix)
+
   def _log(self, *args):
+    # Logging message
     if self.m_verbose and len(*args) != 0: self.m_print.pprint(*args)
     return
 
   def _normalize_dirs(self, dirs: list):
+    # Normalize all directories
     result = []
     for dir in dirs: result.append(File.NormalizePath(dir, True))
     return result
 
+  def _load_prefs(self):
+    # Load preferences from a json file
+    result = {}
+    try:
+      PREFS_FILE_NAME = "prefs.json"
+      if File.IsFileExists(PREFS_FILE_NAME):
+          data = File.Read(PREFS_FILE_NAME)
+          if data: result = json.loads(data)
+    except Exception as e:
+      result = {}
+      self._log("prefs failed", e)
+    return result
+
+  def _is_file_checked(self, file_path: str):
+    # Determine that a file is checked or not
+    s = file_path.lower()
+    if s in DependencyWalker.g_list_checked_files: return True
+    DependencyWalker.g_list_checked_files.add(s)
+    # self._log(file_path)
+    return False
+
   def walk_dependency_dirs(self, dirs: list):
     # Walk directories to list dependency files
+    DependencyWalker.g_list_checked_files.clear()
     result = {}
     for dir in dirs:
       l = self.walk_dependency_dir(dir)
@@ -41,8 +71,9 @@ class DependencyWalker:
     return result
 
   def is_dependency_file(self, file_path: str):
-    # if not File.ExtractFileExtension(file_path).lower() in ["exe", "dll"]:
-    #   return False
+    # Determine that a file is a dependency file or not
+    if self._is_file_checked(file_path):
+      return False
 
     with open(file_path, "rb") as file:
       if file.read(2) != b"MZ": return False
@@ -71,12 +102,20 @@ class DependencyWalker:
   def _walk_dependency_file(self, file_path: str):
     # Walk a single file
     if not File.IsFileExists(file_path): return []
+    if self._is_file_checked(file_path): return []
 
     pe = pefile.PE(file_path, fast_load=True)
     pe.parse_data_directories()
     if not hasattr(pe, "DIRECTORY_ENTRY_IMPORT"): return []
 
-    return set(map(lambda idi: idi.dll.decode("utf-8"), pe.DIRECTORY_ENTRY_IMPORT))
+    result = set()
+    for idi in pe.DIRECTORY_ENTRY_IMPORT:
+      dependency_file_name = idi.dll.decode("utf-8")
+      if not dependency_file_name.lower().startswith(tuple(self.m_list_ignore_prefix)):
+        result.add(dependency_file_name)
+
+    return result
+    # return set(map(lambda idi: idi.dll.decode("utf-8"), pe.DIRECTORY_ENTRY_IMPORT))
 
   def _get_nonsys_dependency_files(self, dependency_files: set):
     # Get non-system dependency files
@@ -128,6 +167,10 @@ class DependencyWalker:
 
   def walk(self):
     # Walk all dependencies in the target
+    if not File.IsFileExists(self.m_pe_target): return None
+
+    DependencyWalker.g_list_checked_files.clear()
+
     self.m_pe_target_dependencies =\
       self._walk_dependency_file(self.m_pe_target)
     self._log(self.m_pe_target_dependencies)

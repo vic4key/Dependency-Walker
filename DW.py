@@ -6,11 +6,6 @@
 @Name   : Dependency Walker
 '''''''''''''''''''''''''''''''''
 
-'''
-python3 DW.py -a walker -t Sample/FileZilla/EXEs/filezilla.exe -d Sample/FileZilla/DLLs -v
-python3 DW.py -a fulfil -t Sample/FileZilla/EXEs/filezilla.exe -d Sample/FileZilla/DLLs -v
-'''
-
 import sys, argparse
 from PyVutils import Others
 from DependencyWalker import *
@@ -68,6 +63,9 @@ def main():
     if dependencies:
       printout(args, dependencies, "resolvable")
       printout(args, dependencies, "unresolvable")
+    else:
+      print("Error:")
+      print("   The provided target is not found")
   else: print("Action is not available")
 
   print("Finish!")

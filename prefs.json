@@ -1,0 +1,5 @@
+{
+  "ignore_prefix": [
+    "api-ms-win"
+  ]
+}
