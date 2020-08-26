@@ -1,4 +1,4 @@
-import os, pefile, ctypes, pprint, shutil, json, time
+import sys, os, pefile, ctypes, pprint, shutil, json, time
 from PyVutils import File
 
 class DependencyWalker:
@@ -42,17 +42,30 @@ class DependencyWalker:
     for dir in dirs: result.append(File.NormalizePath(dir, True))
     return result
 
+  def _get_relative_current_dir(self):
+    # Get relative current directory
+    result = ""
+    if getattr(sys, "frozen", False):
+      result = os.path.dirname(sys.executable)
+    elif __file__:
+      result = os.path.dirname(__file__)
+    return result
+
   def _load_prefs(self):
     # Load preferences from a json file
     result = {}
+
+    prefs_file_path = self._get_relative_current_dir()
+    prefs_file_path = os.path.join(prefs_file_path, "DW.json")
+    if not File.IsFileExists(prefs_file_path): return result
+
     try:
-      PREFS_FILE_NAME = R"prefs.json"
-      if File.IsFileExists(PREFS_FILE_NAME):
-          data = File.Read(PREFS_FILE_NAME)
-          if data: result = json.loads(data)
+      data = File.Read(prefs_file_path)
+      if data: result = json.loads(data)
     except Exception as e:
       result = {}
       self._log("prefs failed", e)
+
     return result
 
   def _is_file_checked(self, file_path: str):
