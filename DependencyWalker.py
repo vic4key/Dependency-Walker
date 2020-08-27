@@ -13,7 +13,8 @@ class DependencyWalker:
 
     self.m_pe_target = target
     if not File.IsFileExists(self.m_pe_target): return
-    target_dir, _ = os.path.split(self.m_pe_target)
+    target_dir = File.ExtractFileDirectory(self.m_pe_target)
+    if not target_dir: target_dir = "."
     target_dir = self._normalize_dirs([target_dir])[0]
 
     self.m_dependency_exts = exts
