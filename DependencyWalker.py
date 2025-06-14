@@ -1,5 +1,5 @@
-import sys, os, pefile, ctypes, pprint, shutil, json, time
-from PyVutils import File
+import sys, os, pefile, ctypes, pprint, json, time
+import PyVutils as vu
 
 class DependencyWalker:
   # Dependency Walker
@@ -12,8 +12,8 @@ class DependencyWalker:
     self.m_print = pprint.PrettyPrinter(indent=2)
 
     self.m_pe_target = target
-    if not File.IsFileExists(self.m_pe_target): return
-    target_dir = File.ExtractFileDirectory(self.m_pe_target)
+    if not vu.is_file_exists(self.m_pe_target): return
+    target_dir = vu.extract_file_directory(self.m_pe_target)
     if not target_dir: target_dir = "."
     target_dir = self._normalize_dirs([target_dir])[0]
 
@@ -40,7 +40,7 @@ class DependencyWalker:
   def _normalize_dirs(self, dirs: list):
     # Normalize all directories
     result = []
-    for dir in dirs: result.append(File.NormalizePath(dir, True))
+    for dir in dirs: result.append(vu.normalize_path(dir, True))
     return result
 
   def _get_relative_current_dir(self):
@@ -58,10 +58,10 @@ class DependencyWalker:
 
     prefs_file_path = self._get_relative_current_dir()
     prefs_file_path = os.path.join(prefs_file_path, "DW.json")
-    if not File.IsFileExists(prefs_file_path): return result
+    if not vu.is_file_exists(prefs_file_path): return result
 
     try:
-      data = File.Read(prefs_file_path)
+      data = vu.read_file(prefs_file_path)
       if data: result = json.loads(data)
     except Exception as e:
       result = {}
@@ -101,7 +101,7 @@ class DependencyWalker:
     pe.parse_data_directories([0, 1], True, True) # IMAGE_DIRECTORY_ENTRY_EXPORT/IMPORT
 
     delta_time = time.perf_counter() - start_time
-    self._log(f"{File.ExtractFileName(file_path)} -> {delta_time:.3f}s")
+    self._log(f"{vu.extract_file_name(file_path)} -> {delta_time:.3f}s")
 
     if not hasattr(pe, "DIRECTORY_ENTRY_EXPORT"): return False
 
@@ -118,7 +118,7 @@ class DependencyWalker:
       if self.is_dependency_file(file_path): result.append(os.path.split(file_path))
       return
 
-    File.LSRecursive(dir, fn_callback, self.m_dependency_exts)
+    vu.recursive_directory(dir, fn_callback, self.m_dependency_exts)
 
     return result
 
@@ -126,14 +126,14 @@ class DependencyWalker:
     # Walk a single file
     start_time = time.perf_counter()
 
-    if not File.IsFileExists(file_path): return []
+    if not vu.is_file_exists(file_path): return []
     if self._is_file_checked(file_path): return []
 
     pe = pefile.PE(file_path, fast_load=True)
     pe.parse_data_directories([0, 1], True, True) # IMAGE_DIRECTORY_ENTRY_EXPORT/IMPORT
 
     delta_time = time.perf_counter() - start_time
-    self._log(f"{File.ExtractFileName(file_path)} -> {delta_time:.3f}s")
+    self._log(f"{vu.extract_file_name(file_path)} -> {delta_time:.3f}s")
 
     if not hasattr(pe, "DIRECTORY_ENTRY_IMPORT"): return []
 
@@ -196,7 +196,7 @@ class DependencyWalker:
 
   def walk(self):
     # Walk all dependencies in the target
-    if not File.IsFileExists(self.m_pe_target): return None
+    if not vu.is_file_exists(self.m_pe_target): return None
 
     DependencyWalker.g_list_checked_files.clear()
 
@@ -219,7 +219,7 @@ class DependencyWalker:
     result = {"resolvable": {}, "unresolvable": {}}
     for dependency in self.m_pe_target_dependencies:
       file_path = self._get_file_path_by_file_name(dependency)
-      key = "resolvable" if File.IsFileExists(file_path) else "unresolvable"
+      key = "resolvable" if vu.is_file_exists(file_path) else "unresolvable"
       result[key].update({dependency: file_path})
 
     return result

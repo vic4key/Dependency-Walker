@@ -6,9 +6,9 @@
 @Name   : Dependency Walker
 '''''''''''''''''''''''''''''''''
 
-import sys, argparse
-from PyVutils import Others
+import sys, shutil
 from DependencyWalker import *
+from gooey import Gooey, GooeyParser
 
 __package__ = "Dependency Walker"
 __version__ = "1.0.0"
@@ -42,13 +42,14 @@ def printout(args, dependencies: dict, key: str):
 
   return
 
+@Gooey
 def main():
   print(f"{__package__} {__version__}")
 
-  parser = argparse.ArgumentParser(description=__package__)
-  parser.add_argument("-a", "--action", type=str, required=True, default="", choices=ACTIONS, help="The action to do")
-  parser.add_argument("-t", "--target", type=str, required=True, default="", help="The target file that a pe-file")
-  parser.add_argument("-d", "--dirs", type=str, required=True, nargs="+", help="Set of directories that contains dependency files")
+  parser = GooeyParser(description=__package__)
+  parser.add_argument("-a", "--action", type=str, required=True, choices=ACTIONS, help="The action to do")
+  parser.add_argument("-t", "--target", type=str, required=True, help="The target file that a pe-file", widget='FileChooser')
+  parser.add_argument("-d", "--dirs", type=str, required=True, nargs="+", help="Set of directories that contains dependency files", widget='DirChooser')
   parser.add_argument("-e", "--exts", type=str, default=[], nargs="+", help="Set of extensions or any as default")
   parser.add_argument("-v", "--verbose", default=False, action="store_true", help="Print the verbose information")
   args = parser.parse_args()
@@ -78,4 +79,4 @@ def main():
 
 if __name__ == "__main__":
   try: sys.exit(main())
-  except (Exception, KeyboardInterrupt): Others.LogException(sys.exc_info())
+  except (Exception, KeyboardInterrupt): vu.log_exception(sys.exc_info())
