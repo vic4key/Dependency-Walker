@@ -15,10 +15,10 @@ Dependency Walker - a tool that recursive listing and fixing-up dependencies of 
 
 ##### SCREENSHOTS #####
 
-GUI Version (by Gooye).
+##### GUI Version (by Gooye).
 ![](screenshots/GUI.PNG)
 
-##### Help.
+##### CLI Version.
 ![](screenshots/help.PNG)
 
 ##### Eg. 1.
