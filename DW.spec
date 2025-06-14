@@ -25,7 +25,9 @@ exe = EXE(pyz,
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
-          upx=True,
+          upx=False,
           upx_exclude=['vcruntime140.dll'],
           runtime_tmpdir=None,
-          console=True , uac_admin=True, resources=['DW.exe.manifest,1'])
+          console=False,
+          uac_admin=True,
+          resources=[('DW.exe.manifest', 1, 'DW_MANIFEST')])

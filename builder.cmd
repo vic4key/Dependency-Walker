@@ -2,7 +2,7 @@
 
 SET FILE_NAME=dw
 
-PyInstaller --clean --onefile %FILE_NAME%.spec
+PyInstaller --clean %FILE_NAME%.spec
 
 COPY /Y dist\%FILE_NAME%.exe
 

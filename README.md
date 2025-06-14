@@ -5,9 +5,11 @@ Dependency Walker - a tool that recursive listing and fixing-up dependencies of 
 
 ##### INSTALLATION #####
 
-> The [PyVutils](https://github.com/vic4key/PyVutils) library can be found on GitHub
->
-> Run `PyInstaller --onefile DW.py` or `builder.cmd` to create a single exe
+> Install the [PyVutils](https://github.com/vic4key/PyVutils) library can be found on GitHub
+> 
+> Install PyInstaller
+> 
+> Run `builder.cmd` to create a single exe
 
 ##### COMMANDS #####
 
